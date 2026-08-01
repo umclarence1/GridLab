@@ -90,8 +90,8 @@ function Waveform({ time, max }: { time: number; max: number }) {
         }
         c.strokeStyle = color; c.lineWidth = 2; c.stroke();
       };
-      drawLine("#ff5d55", n => n < .58 ? 18 + n * 24 : 3, h * .31);
-      drawLine("#6ce5b1", n => n < .12 ? 9 : n < .58 ? 3 : 9, h * .72);
+      drawLine("#f4f4f4", n => n < .58 ? 18 + n * 24 : 3, h * .31);
+      drawLine("#8b8b8b", n => n < .12 ? 9 : n < .58 ? 3 : 9, h * .72);
     };
     draw(); const ro = new ResizeObserver(draw); ro.observe(parent); return () => ro.disconnect();
   }, [time, max]);
