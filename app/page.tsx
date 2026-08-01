@@ -1,194 +1,112 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-type Scenario = "selective" | "miscoordinated" | "breakerFailure";
-type Stage = "ready" | "fault" | "pickup" | "trip" | "opening" | "isolated" | "backup";
-type SimEvent = { time: number; level: "info" | "warn" | "trip" | "safe"; source: string; message: string };
+type ComponentKey = "source" | "relay" | "breaker" | "feeder";
 
-const scenarios: Record<Scenario, { title: string; subtitle: string; target: string; events: SimEvent[] }> = {
-  selective: {
-    title: "Selective protection",
-    subtitle: "R21 should isolate Feeder 1 while healthy loads remain online.",
-    target: "CB-21",
-    events: [
-      { time: 0, level: "warn", source: "F1", message: "3-phase fault applied on Feeder 1" },
-      { time: 18, level: "warn", source: "CT-21", message: "Current rises to 4.82 kA" },
-      { time: 42, level: "warn", source: "R21", message: "Pickup threshold exceeded" },
-      { time: 126, level: "trip", source: "R21", message: "Trip command asserted to CB-21" },
-      { time: 188, level: "trip", source: "CB-21", message: "Breaker contacts separated" },
-      { time: 214, level: "safe", source: "SYSTEM", message: "Fault isolated · Feeder 2 remains live" },
-    ],
-  },
-  miscoordinated: {
-    title: "Miscoordinated relays",
-    subtitle: "R1 is set too fast and may disconnect the entire bus.",
-    target: "CB-01",
-    events: [
-      { time: 0, level: "warn", source: "F1", message: "3-phase fault applied on Feeder 1" },
-      { time: 18, level: "warn", source: "CT-21", message: "Current rises to 4.82 kA" },
-      { time: 40, level: "warn", source: "R1 + R21", message: "Both relays pick up" },
-      { time: 86, level: "trip", source: "R1", message: "Upstream trip issued too early" },
-      { time: 151, level: "trip", source: "CB-01", message: "Main breaker opened" },
-      { time: 180, level: "warn", source: "SYSTEM", message: "Fault cleared · both feeders lost supply" },
-    ],
-  },
-  breakerFailure: {
-    title: "Breaker failure backup",
-    subtitle: "CB-21 receives a trip but fails; R1 must clear the fault.",
-    target: "CB-01",
-    events: [
-      { time: 0, level: "warn", source: "F1", message: "3-phase fault applied on Feeder 1" },
-      { time: 42, level: "warn", source: "R21", message: "Pickup threshold exceeded" },
-      { time: 126, level: "trip", source: "R21", message: "Trip command asserted to CB-21" },
-      { time: 205, level: "warn", source: "CB-21", message: "Breaker failed to interrupt current" },
-      { time: 286, level: "trip", source: "R1", message: "Backup protection trip asserted" },
-      { time: 348, level: "safe", source: "CB-01", message: "Main breaker opened · fault cleared" },
-    ],
-  },
+const components: Record<ComponentKey, { name: string; short: string; description: string }> = {
+  source: { name: "Power source", short: "Supplies electricity", description: "The grid supplies electricity to the substation. In this lesson, it delivers power at 11,000 volts." },
+  relay: { name: "Protection relay", short: "Detects danger", description: "The relay watches the current. If it becomes dangerously high, the relay tells the breaker to open." },
+  breaker: { name: "Circuit breaker", short: "Disconnects the fault", description: "The breaker is a powerful safety switch. It opens the circuit when the relay sends a trip command." },
+  feeder: { name: "Feeder", short: "Carries power to customers", description: "A feeder carries electricity from the substation to a group of homes, buildings or machines." },
 };
 
-function stageAt(time: number, scenario: Scenario): Stage {
-  if (time <= 0) return "ready";
-  if (scenario === "breakerFailure") {
-    if (time < 42) return "fault";
-    if (time < 126) return "pickup";
-    if (time < 205) return "trip";
-    if (time < 286) return "opening";
-    if (time < 348) return "backup";
-    return "isolated";
-  }
-  const tripAt = scenario === "miscoordinated" ? 86 : 126;
-  const openAt = scenario === "miscoordinated" ? 151 : 188;
-  const clearAt = scenario === "miscoordinated" ? 180 : 214;
-  if (time < 42) return "fault";
-  if (time < tripAt) return "pickup";
-  if (time < openAt) return "trip";
-  if (time < clearAt) return "opening";
-  return "isolated";
-}
-
-function Waveform({ time, max }: { time: number; max: number }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const parent = canvas.parentElement!;
-    const draw = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const w = parent.clientWidth; const h = parent.clientHeight;
-      canvas.width = w * dpr; canvas.height = h * dpr; canvas.style.width = `${w}px`; canvas.style.height = `${h}px`;
-      const c = canvas.getContext("2d"); if (!c) return; c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
-      c.strokeStyle = "rgba(255,255,255,.08)"; c.lineWidth = 1;
-      [0.25, .5, .75].forEach(y => { c.beginPath(); c.moveTo(0, h * y); c.lineTo(w, h * y); c.stroke(); });
-      const progress = Math.min(time / max, 1);
-      const drawLine = (color: string, amp: (x: number) => number, offset: number) => {
-        c.beginPath();
-        for (let x = 0; x <= w * progress; x += 2) {
-          const n = x / w; const y = offset + amp(n) * Math.sin(n * 42);
-          x ? c.lineTo(x, y) : c.moveTo(x, y);
-        }
-        c.strokeStyle = color; c.lineWidth = 2; c.stroke();
-      };
-      drawLine("#f4f4f4", n => n < .58 ? 18 + n * 24 : 3, h * .31);
-      drawLine("#8b8b8b", n => n < .12 ? 9 : n < .58 ? 3 : 9, h * .72);
-    };
-    draw(); const ro = new ResizeObserver(draw); ro.observe(parent); return () => ro.disconnect();
-  }, [time, max]);
-  return <canvas ref={ref} role="img" aria-label="Synchronized current and voltage waveform" />;
-}
+const phases = [
+  { title: "Normal operation", text: "Electricity is flowing safely to both buildings.", action: "Everything is working normally.", current: "120 A" },
+  { title: "A short circuit occurs", text: "Two conductors make an unintended connection on Feeder 1.", action: "Current rises very quickly.", current: "4,820 A" },
+  { title: "The relay detects danger", text: "The relay sees that the current is above its safe limit.", action: "It starts its protection timer.", current: "4,820 A" },
+  { title: "The relay sends a trip command", text: "The dangerous current has lasted long enough to confirm a real fault.", action: "The relay tells Breaker 1 to open.", current: "4,820 A" },
+  { title: "The breaker opens", text: "Breaker 1 disconnects the damaged feeder from the power source.", action: "Fault current stops flowing.", current: "0 A" },
+  { title: "The fault is safely isolated", text: "Building A loses power, but the healthy feeder continues supplying Building B.", action: "Only the smallest necessary area was disconnected.", current: "0 A" },
+];
 
 export default function Home() {
-  const [scenario, setScenario] = useState<Scenario>("selective");
-  const [prediction, setPrediction] = useState("CB-21");
-  const [time, setTime] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [hasRun, setHasRun] = useState(false);
-  const [speed, setSpeed] = useState(1);
-  const active = scenarios[scenario];
-  const maxTime = active.events.at(-1)?.time ?? 220;
-  const stage = stageAt(time, scenario);
-  const visibleEvents = active.events.filter(event => event.time <= time);
-  const faultActive = time > 0 && stage !== "isolated";
-  const mainOpen = stage === "isolated" && scenario !== "selective";
-  const feeder1Open = stage === "isolated" && scenario === "selective";
-  const feeder2Live = !mainOpen;
-  const current = time === 0 ? 118 : faultActive ? 4820 : 0;
-  const voltage = time === 0 ? 11 : faultActive ? 2.1 : mainOpen ? 0 : 10.9;
-  const resultCorrect = prediction === active.target;
+  const [mode, setMode] = useState<"learn" | "lab">("learn");
+  const [lesson, setLesson] = useState(0);
+  const [selected, setSelected] = useState<ComponentKey>("relay");
+  const [phase, setPhase] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [labScenario, setLabScenario] = useState("correct");
+  const [labResult, setLabResult] = useState(false);
 
   useEffect(() => {
-    if (!running) return;
+    if (!playing) return;
     const timer = window.setInterval(() => {
-      setTime(currentTime => {
-        const next = currentTime + 4 * speed;
-        if (next >= maxTime) { setRunning(false); setHasRun(true); return maxTime; }
-        return next;
+      setPhase(current => {
+        if (current >= phases.length - 1) { setPlaying(false); return current; }
+        return current + 1;
       });
-    }, 32);
+    }, 1500);
     return () => window.clearInterval(timer);
-  }, [running, speed, maxTime]);
+  }, [playing]);
 
-  function run() { setTime(1); setHasRun(false); setRunning(true); }
-  function reset() { setRunning(false); setTime(0); setHasRun(false); }
-  function changeScenario(next: Scenario) { setScenario(next); setPrediction(next === "selective" ? "CB-21" : "CB-01"); reset(); }
-
-  const relayReason = useMemo(() => ({
-    measured: faultActive ? "4.82 kA" : time === 0 ? "118 A" : "0 A",
-    pickup: "1.20 kA",
-    condition: time >= 42 && faultActive ? "TRUE" : "FALSE",
-    timer: time < 42 ? "0 ms" : `${Math.min(Math.round(time - 42), 84)} / 84 ms`,
-    output: time >= 126 ? "TRIP" : "STANDBY",
-  }), [time, faultActive]);
+  function startSimulation() { setPhase(1); setPlaying(true); }
+  function resetSimulation() { setPhase(0); setPlaying(false); }
+  function goTo(next: number) { setLesson(next); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  const fault = phase >= 1 && phase < 5;
+  const relayActive = phase >= 2 && phase < 5;
+  const breakerOpen = phase >= 4;
 
   return (
     <main>
-      <header className="topbar">
-        <a className="brand" href="#top"><span className="brand-mark">G</span><span>GRIDLAB<small>PROTECTION LABORATORY</small></span></a>
-        <div className="system-status"><span className={faultActive ? "dot alarm" : "dot"} />{faultActive ? "FAULT IN PROGRESS" : running ? "SIMULATION ACTIVE" : "LAB READY"}</div>
-        <div className="header-actions"><button className="quiet" onClick={reset}>Reset</button><button className="run-button" onClick={run} disabled={running}><span>⚡</span>{hasRun ? "Run again" : "Inject fault"}</button></div>
+      <header className="header">
+        <button className="logo" onClick={() => { setMode("learn"); goTo(0); }}><span>G</span><strong>GridLab</strong></button>
+        <div className="mode-switch" aria-label="Experience mode"><button className={mode === "learn" ? "active" : ""} onClick={() => setMode("learn")}>Learn</button><button className={mode === "lab" ? "active" : ""} onClick={() => setMode("lab")}>Advanced lab</button></div>
+        <p>Educational simulator</p>
       </header>
 
-      <div className="app-shell" id="top">
-        <aside className="sidebar">
-          <section><p className="section-label">01 · SCENARIO</p>{(Object.keys(scenarios) as Scenario[]).map((key, i) => <button key={key} className={`scenario ${scenario === key ? "selected" : ""}`} onClick={() => changeScenario(key)}><span>0{i + 1}</span><div><strong>{scenarios[key].title}</strong><small>{i === 0 ? "Primary protection" : i === 1 ? "Wrong relay settings" : "Backup operation"}</small></div></button>)}</section>
-          <section className="prediction"><p className="section-label">02 · MAKE A PREDICTION</p><h3>Which breaker should clear this fault?</h3><div className="breaker-choices">{["CB-01", "CB-21", "CB-22"].map(id => <button key={id} onClick={() => setPrediction(id)} className={prediction === id ? "chosen" : ""}><span className="radio" />{id}<small>{id === "CB-01" ? "Main" : id === "CB-21" ? "Feeder 1" : "Feeder 2"}</small></button>)}</div></section>
-          <section className="learning-goal"><p className="section-label">LEARNING GOAL</p><p>Protection should remove the <strong>smallest possible section</strong> while keeping healthy loads energized.</p></section>
-          <p className="disclaimer">Educational approximation · Not for relay setting or system design</p>
-        </aside>
+      {mode === "learn" ? <>
+        <div className="progress" aria-label={`Lesson ${lesson + 1} of 4`}><div>{["Welcome", "Meet the system", "Watch a fault", "Check your learning"].map((label, index) => <button key={label} className={lesson === index ? "current" : lesson > index ? "done" : ""} onClick={() => index <= lesson && goTo(index)}><span>{lesson > index ? "✓" : index + 1}</span><small>{label}</small></button>)}</div><i style={{ width: `${(lesson / 3) * 100}%` }} /></div>
 
-        <section className="workspace">
-          <div className="workspace-head"><div><p className="section-label">LIVE SINGLE-LINE</p><h1>11 kV Radial Substation</h1></div><div className="sim-clock"><span>SIMULATION CLOCK</span><strong>+{Math.round(time).toString().padStart(3, "0")}<small> ms</small></strong></div></div>
+        {lesson === 0 && <section className="welcome lesson-page">
+          <p className="eyebrow">DEMO WEDNESDAY · EPISODE 01</p>
+          <h1>What happens when<br />electricity goes wrong?</h1>
+          <p className="intro">Follow one short circuit from the moment it begins until the power system makes itself safe. No previous protection knowledge needed.</p>
+          <button className="primary" onClick={() => goTo(1)}>Start the guided lesson <span>→</span></button>
+          <div className="promise"><span>About 3 minutes</span><span>Plain-language explanations</span><span>Learn at your own pace</span></div>
+          <div className="mini-flow" aria-label="Lesson overview"><div><b>1</b><strong>A fault occurs</strong></div><i /><div><b>2</b><strong>Danger is detected</strong></div><i /><div><b>3</b><strong>The fault is disconnected</strong></div></div>
+        </section>}
 
-          <div className={`substation ${faultActive ? "faulting" : ""}`}>
-            <div className="source component"><span className="component-icon">~</span><strong>GRID</strong><small>33 kV · 50 Hz</small></div><div className={`wire horizontal ${mainOpen ? "dead" : "live"}`} />
-            <div className="transformer component"><span className="coil">◯◯</span><strong>T1</strong><small>10 MVA · 8%</small></div><div className={`wire horizontal ${mainOpen ? "dead" : "live"}`} />
-            <div className={`breaker component ${mainOpen ? "open" : "closed"}`}><span className="breaker-symbol"><i /></span><strong>CB-01</strong><small>{mainOpen ? "OPEN" : "CLOSED"}</small><b className="relay-tag">R1</b></div><div className={`wire horizontal bus-link ${mainOpen ? "dead" : "live"}`} />
-            <div className={`busbar ${mainOpen ? "dead" : "live"}`}><strong>BUS A</strong><small>{mainOpen ? "0.0" : voltage.toFixed(1)} kV</small><div className="branch branch-one"><i className={mainOpen || feeder1Open ? "dead" : "live"} /><div className={`breaker mini ${feeder1Open ? "open" : "closed"}`}><span className="breaker-symbol"><i /></span><strong>CB-21</strong><b className="relay-tag">R21</b></div><i className={mainOpen || feeder1Open ? "dead" : "live"} /><div className="load"><span>▥</span><strong>LOAD A</strong><small>{feeder1Open || mainOpen ? "OFFLINE" : "2.4 MW"}</small></div>{faultActive && <div className="fault-marker"><span>ϟ</span><strong>F1</strong><small>3Φ SHORT</small></div>}</div><div className="branch branch-two"><i className={feeder2Live ? "live" : "dead"} /><div className="breaker mini closed"><span className="breaker-symbol"><i /></span><strong>CB-22</strong><b className="relay-tag">R22</b></div><i className={feeder2Live ? "live" : "dead"} /><div className="load"><span>▥</span><strong>LOAD B</strong><small>{feeder2Live ? "1.8 MW" : "OFFLINE"}</small></div></div></div>
+        {lesson === 1 && <section className="lesson-page learn-components">
+          <div className="lesson-heading"><p className="eyebrow">STEP 1 OF 3</p><h1>Meet the protection system</h1><p>Click each component to learn its job. We will use all four during the simulation.</p></div>
+          <div className="component-layout">
+            <div className="simple-system">{(["source", "relay", "breaker", "feeder"] as ComponentKey[]).map((key, index) => <div key={key} className="system-part-wrap">{index > 0 && <i className="connector" />}<button className={`system-part ${selected === key ? "selected" : ""}`} onClick={() => setSelected(key)}><span>{key === "source" ? "~" : key === "relay" ? "!" : key === "breaker" ? "—/" : "→"}</span><strong>{components[key].name}</strong><small>{components[key].short}</small></button></div>)}</div>
+            <aside className="definition"><p>SELECTED COMPONENT</p><span className="definition-icon">{selected === "source" ? "~" : selected === "relay" ? "!" : selected === "breaker" ? "—/" : "→"}</span><h2>{components[selected].name}</h2><p>{components[selected].description}</p><div className="analogy"><strong>Think of it like:</strong> {selected === "source" ? "the water supply entering a building." : selected === "relay" ? "a smoke detector that notices danger." : selected === "breaker" ? "an automatic safety door that shuts off the danger." : "a road carrying electricity to its destination."}</div></aside>
           </div>
+          <div className="lesson-actions"><button className="secondary" onClick={() => goTo(0)}>Back</button><button className="primary" onClick={() => goTo(2)}>I understand — show me a fault <span>→</span></button></div>
+        </section>}
 
-          <div className="readings">
-            <article><span>BUS VOLTAGE</span><strong className={faultActive ? "danger" : ""}>{voltage.toFixed(1)}<small> kV</small></strong><i style={{ width: `${Math.min((voltage / 11) * 100, 100)}%` }} /></article>
-            <article><span>FEEDER CURRENT</span><strong className={faultActive ? "danger" : ""}>{current >= 1000 ? (current / 1000).toFixed(2) : current}<small>{current >= 1000 ? " kA" : " A"}</small></strong><i className="red" style={{ width: `${Math.min((current / 5000) * 100, 100)}%` }} /></article>
-            <article><span>R21 STATE</span><strong className={stage === "pickup" ? "amber" : stage === "trip" || feeder1Open ? "danger" : ""}>{stage === "pickup" ? "PICKUP" : stage === "trip" || feeder1Open ? "TRIP" : "STANDBY"}</strong><small>{stage === "pickup" ? "Timer active" : feeder1Open ? "Output asserted" : "Ready"}</small></article>
-            <article><span>SELECTIVITY</span><strong className={hasRun ? scenario === "selective" ? "safe" : "danger" : ""}>{hasRun ? scenario === "selective" ? "MAINTAINED" : "LOST" : "—"}</strong><small>{hasRun ? scenario === "selective" ? "Healthy feeder live" : "Healthy feeder interrupted" : "Awaiting test"}</small></article>
+        {lesson === 2 && <section className="lesson-page simulation-lesson">
+          <div className="lesson-heading"><p className="eyebrow">STEP 2 OF 3</p><h1>Watch the system protect itself</h1><p>One event will be highlighted at a time. Follow the explanation below the diagram.</p></div>
+          <div className={`guided-simulator ${fault ? "has-fault" : ""}`}>
+            <div className="large-system">
+              <div className="diagram-source"><span>~</span><strong>Power source</strong><small>Supplying electricity</small></div><i className={breakerOpen ? "line off" : "line"} />
+              <div className={`diagram-relay ${relayActive ? "active" : ""}`}><span>!</span><strong>Protection relay</strong><small>{relayActive ? phase >= 3 ? "Trip command sent" : "Danger detected" : "Watching the current"}</small></div>
+              <div className={`diagram-breaker ${breakerOpen ? "open" : ""}`}><span><i /></span><strong>Breaker 1</strong><small>{breakerOpen ? "OPEN" : "CLOSED"}</small></div><i className={breakerOpen ? "line off" : "line"} />
+              <div className="split"><div className={breakerOpen ? "branch off" : "branch"}><span>Building A</span>{fault && <b className="fault">SHORT<br />CIRCUIT</b>}</div><div className="branch"><span>Building B</span><small>Still powered</small></div></div>
+            </div>
+            <div className="reading-strip"><span>CURRENT ON FEEDER 1</span><strong>{phases[phase].current}</strong><small>{fault ? "Dangerously high" : breakerOpen ? "Disconnected" : "Normal"}</small></div>
           </div>
+          <article className="step-explanation"><span className="step-number">{phase + 1}</span><div><p>{playing ? "SIMULATION RUNNING" : phase === 0 ? "READY TO BEGIN" : phase === 5 ? "SIMULATION COMPLETE" : "SIMULATION PAUSED"}</p><h2>{phases[phase].title}</h2><p>{phases[phase].text}</p><strong>{phases[phase].action}</strong></div></article>
+          <div className="phase-dots">{phases.map((item, index) => <button key={item.title} aria-label={item.title} className={phase === index ? "active" : phase > index ? "passed" : ""} onClick={() => { setPlaying(false); setPhase(index); }}>{index + 1}</button>)}</div>
+          <div className="lesson-actions"><button className="secondary" onClick={resetSimulation}>Reset</button>{phase === 0 ? <button className="primary" onClick={startSimulation}>Start short-circuit simulation <span>→</span></button> : playing ? <button className="primary" onClick={() => setPlaying(false)}>Pause simulation</button> : phase < 5 ? <button className="primary" onClick={() => setPlaying(true)}>Continue <span>→</span></button> : <button className="primary" onClick={() => goTo(3)}>What did I learn? <span>→</span></button>}</div>
+        </section>}
 
-          <div className="lower-panels">
-            <article className="panel waveform"><div className="panel-head"><div><p className="section-label">SYNCHRONIZED SIGNALS</p><h2>Fault response</h2></div><div className="legend"><span className="current-key">CURRENT</span><span className="voltage-key">VOLTAGE</span></div></div><div className="canvas-wrap"><Waveform time={time} max={maxTime} /></div><div className="replay"><button onClick={() => setRunning(!running)} disabled={!time}>{running ? "Ⅱ" : "▶"}</button><input aria-label="Replay timeline" type="range" min="0" max={maxTime} value={time} onChange={e => { setRunning(false); setTime(Number(e.target.value)); setHasRun(Number(e.target.value) === maxTime); }} /><select aria-label="Playback speed" value={speed} onChange={e => setSpeed(Number(e.target.value))}><option value=".5">0.5×</option><option value="1">1×</option><option value="2">2×</option></select></div></article>
-            <article className="panel relay-inspector"><div className="panel-head"><div><p className="section-label">DECISION INSPECTOR</p><h2>Why did R21 operate?</h2></div><span className={`relay-state ${relayReason.output === "TRIP" ? "tripped" : ""}`}>{relayReason.output}</span></div><dl><div><dt>Measured current</dt><dd>{relayReason.measured}</dd></div><div><dt>Pickup setting</dt><dd>{relayReason.pickup}</dd></div><div><dt>Above pickup</dt><dd className={relayReason.condition === "TRUE" ? "yes" : ""}>{relayReason.condition}</dd></div><div><dt>Definite-time delay</dt><dd>{relayReason.timer}</dd></div></dl><p className="explanation">{time < 42 ? "R21 is monitoring the feeder current." : time < 126 ? "Current remains above pickup, so the definite-time element is counting toward a trip." : "The pickup condition persisted for the full delay. R21 asserted its trip output to CB-21."}</p></article>
-          </div>
-        </section>
-
-        <aside className="event-rail">
-          <div className="rail-head"><div><p className="section-label">EVENT RECORDER</p><h2>Sequence of events</h2></div><span>{visibleEvents.length}/{active.events.length}</span></div>
-          <div className="scenario-summary"><span className="number">{scenario === "selective" ? "01" : scenario === "miscoordinated" ? "02" : "03"}</span><div><strong>{active.title}</strong><p>{active.subtitle}</p></div></div>
-          <div className="event-list">{visibleEvents.length ? visibleEvents.map((event, index) => <div className={`event ${event.level}`} key={`${event.time}-${event.source}`}><span className="event-node" /><time>+{event.time.toString().padStart(3, "0")} ms</time><strong>{event.source}</strong><p>{event.message}</p>{index === visibleEvents.length - 1 && running && <i className="active-event" />}</div>) : <div className="empty-log"><span>⌁</span><strong>No events recorded</strong><p>Make a prediction, then inject the fault.</p></div>}</div>
-          {hasRun && <div className={`result-card ${resultCorrect ? "correct" : "incorrect"}`}><span>{resultCorrect ? "✓" : "×"}</span><div><small>YOUR PREDICTION</small><strong>{resultCorrect ? "Correct" : `Expected ${active.target}`}</strong><p>{scenario === "selective" ? "Only the faulted feeder was isolated." : scenario === "miscoordinated" ? "The upstream relay operated before R21." : "Backup protection cleared the uncleared fault."}</p></div></div>}
-          <div className="concept"><span>KEY CONCEPT</span><strong>Protection is a race—with rules.</strong><p>The nearest device should clear the fault first. Upstream protection waits as backup.</p></div>
-        </aside>
-      </div>
-      <footer><span>GRIDLAB · DEMO WEDNESDAY · EPISODE 01</span><p>Interactive Protection Sequence Laboratory</p><span>Built for learning, not system design.</span></footer>
+        {lesson === 3 && <section className="lesson-page review">
+          <div className="lesson-heading"><p className="eyebrow">STEP 3 OF 3</p><h1>You just cleared a power-system fault</h1><p>Here is the complete protection sequence in plain language.</p></div>
+          <div className="sequence-summary">{["Short circuit", "Current rises", "Relay detects danger", "Breaker opens", "Fault is isolated"].map((item, index) => <div key={item}><span>{index + 1}</span><strong>{item}</strong>{index < 4 && <i>→</i>}</div>)}</div>
+          <div className="quiz"><p>QUICK CHECK</p><h2>Why did only Building A lose power?</h2>{["The power source stopped working", "The breaker isolated only the faulty feeder", "Building B has its own power station"].map((option, index) => <button key={option} className={answer === option ? index === 1 ? "correct" : "wrong" : ""} onClick={() => setAnswer(option)}><span>{String.fromCharCode(65 + index)}</span>{option}</button>)}{answer && <div className={`feedback ${answer.includes("isolated") ? "correct" : ""}`}><strong>{answer.includes("isolated") ? "Correct." : "Not quite."}</strong> {answer.includes("isolated") ? "Good protection disconnects the smallest possible part of the system, keeping healthy areas powered." : "The source was still working. Try thinking about what the breaker disconnected."}</div>}</div>
+          <div className="key-lesson"><span>THE BIG IDEA</span><h2>Protection is about detecting danger and disconnecting only what is necessary.</h2><p>The relay detects the fault. The breaker removes it. The healthy part of the system keeps working.</p></div>
+          <div className="lesson-actions"><button className="secondary" onClick={() => { setAnswer(null); goTo(2); }}>Watch again</button><button className="primary" onClick={() => setMode("lab")}>Try the advanced lab <span>→</span></button></div>
+        </section>}
+      </> : <section className="lab-page">
+        <div className="lab-intro"><p className="eyebrow">ADVANCED LAB</p><h1>Change the protection. See the consequence.</h1><p>This area assumes you completed the guided lesson. Choose a scenario and compare which parts of the system lose power.</p><button className="text-button" onClick={() => setMode("learn")}>← Return to guided lesson</button></div>
+        <div className="scenario-grid">{[{ id: "correct", n: "01", title: "Correct coordination", text: "The nearest breaker clears the fault." },{ id: "too-fast", n: "02", title: "Main relay too fast", text: "The upstream breaker trips unnecessarily." },{ id: "failure", n: "03", title: "Feeder breaker fails", text: "Backup protection must operate." }].map(item => <button key={item.id} className={labScenario === item.id ? "selected" : ""} onClick={() => { setLabScenario(item.id); setLabResult(false); }}><span>{item.n}</span><strong>{item.title}</strong><p>{item.text}</p></button>)}</div>
+        <div className="lab-console"><div><span>FAULT LOCATION</span><strong>Feeder 1</strong></div><div><span>EXPECTED PRIMARY DEVICE</span><strong>Breaker 1</strong></div><button className="primary" onClick={() => setLabResult(true)}>Run scenario <span>→</span></button></div>
+        {labResult && <div className="lab-result"><span>{labScenario === "correct" ? "✓" : "!"}</span><div><p>SCENARIO RESULT</p><h2>{labScenario === "correct" ? "Protection remained selective" : labScenario === "too-fast" ? "Healthy customers lost power" : "Backup protection cleared the fault"}</h2><p>{labScenario === "correct" ? "Breaker 1 disconnected only the faulted feeder. Building B remained powered." : labScenario === "too-fast" ? "The main breaker opened before the feeder breaker. Both buildings lost power." : "Breaker 1 failed to open, so the main breaker disconnected both feeders to stop the fault."}</p></div></div>}
+      </section>}
+      <footer><strong>GRIDLAB</strong><span>Interactive Protection Learning Laboratory</span><span>Educational approximation · Not for system design</span></footer>
     </main>
   );
 }
