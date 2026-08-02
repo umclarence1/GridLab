@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { Lesson } from "./GameApp";
+import type { Mission } from "./GameApp";
 
-export default function PowerSystemSimulation({lesson,prediction,tick,playing,setTick,setPlaying,explain}:{lesson:Lesson;prediction:string;tick:number;playing:boolean;setTick:(n:number)=>void;setPlaying:(p:boolean)=>void;explain:()=>void}){
+export default function PowerSystemSimulation({lesson,prediction,tick,playing,setTick,setPlaying,explain}:{lesson:Mission;prediction:string;tick:number;playing:boolean;setTick:(n:number)=>void;setPlaying:(p:boolean)=>void;explain:()=>void}){
   const [view,setView]=useState<"beginner"|"engineering">("beginner");
   const normal=lesson.id===1, overload=lesson.id===6, earth=lesson.id===3||lesson.id===5, selective=lesson.id===5;
   const event=normal?["Source energized","Transformer supplies 11 kV bus","Main breaker is closed","Feeder current is normal","Hospital receives power","System remains healthy"]:overload?["Factory motors start","Load current increases","CT measures 780 A","Relay timer begins","Current falls below pickup","Breaker remains closed"]:earth?["System healthy", "Phase A touches earth", "Residual current appears", "Earth relay picks up", "Feeder breaker opens", "Faulted feeder isolated"]:["System healthy","Three phases short together","Fault current surges","Overcurrent relay picks up","Feeder breaker opens","Fault current becomes zero"];
