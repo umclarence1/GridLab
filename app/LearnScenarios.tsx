@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { awardProgress } from "./ProgressHUD";
 
 type Scenario = "short" | "ground" | "overload" | "bus";
 
@@ -23,6 +24,7 @@ export default function LearnScenarios() {
     const timer = window.setTimeout(() => setStep(value => value + 1), 1150);
     return () => window.clearTimeout(timer);
   }, [item.steps.length, playing, step]);
+  useEffect(() => { if (step >= item.steps.length) awardProgress(`fault-${scenario}`, 25, scenario === "overload" ? "Overload Detective" : undefined); }, [item.steps.length, scenario, step]);
 
   function choose(next: Scenario) { setScenario(next); setStep(0); setPlaying(false); }
   function run() { setStep(1); setPlaying(true); }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { awardProgress } from "./ProgressHUD";
 
 const predictions = ["Residential feeder breaker", "Main substation breaker", "Every feeder breaker", "No breaker should open"];
 const reflections = ["Increase the main relay delay", "Trip every feeder faster", "Disable backup protection", "Increase the feeder relay delay"];
@@ -20,10 +21,10 @@ export default function ProtectionChallenge() {
   }, []);
   useEffect(() => {
     if (!running) return;
-    if (stage >= 5) { setRunning(false); window.localStorage.setItem("gridlab-first-challenge", "complete"); setSaved(true); return; }
+    if (stage >= 5) { setRunning(false); window.localStorage.setItem("gridlab-first-challenge", "complete"); awardProgress("challenge-1", correct ? 50 : 30, correct ? "Selective Protector" : "First Challenge"); setSaved(true); return; }
     const timer = window.setTimeout(() => setStage(value => value + 1), 950);
     return () => window.clearTimeout(timer);
-  }, [running, stage]);
+  }, [correct, running, stage]);
 
   function start() { if (!prediction) return; setStage(1); setReflection(null); setRunning(true); }
   function reset() { setStage(0); setRunning(false); setPrediction(null); setReflection(null); }

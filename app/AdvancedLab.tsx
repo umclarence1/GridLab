@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { awardProgress } from "./ProgressHUD";
 
 type FaultType = "short" | "ground" | "overload" | "bus";
 type Protection = "selective" | "fast" | "failure";
@@ -39,6 +40,7 @@ export default function AdvancedLab() {
     }), 1050);
     return () => window.clearTimeout(timer);
   }, [running, stage]);
+  useEffect(() => { if (stage === 6) awardProgress(`lab-${fault}-${protection}`, 35, protection === "failure" ? "Backup Protection Master" : undefined); }, [fault, protection, stage]);
 
   function reset(nextFault?: FaultType) {
     if (nextFault) setFault(nextFault);

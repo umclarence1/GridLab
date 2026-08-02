@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AdvancedLab from "./AdvancedLab";
 import LearnScenarios from "./LearnScenarios";
 import ProtectionChallenge from "./ProtectionChallenge";
+import ProgressHUD, { awardProgress } from "./ProgressHUD";
 
 type ComponentKey = "source" | "relay" | "breaker" | "feeder";
 
@@ -54,7 +55,7 @@ export default function Home() {
 
   function startSimulation() { setPhase(1); setPlaying(true); }
   function resetSimulation() { setPhase(0); setPlaying(false); }
-  function goTo(next: number) { setLesson(next); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function goTo(next: number) { setLesson(next); if (next === 3) awardProgress("foundations", 40, "Fault Fundamentals"); window.scrollTo({ top: 0, behavior: "smooth" }); }
   const fault = phase >= 1 && phase < 5;
   const relayActive = phase >= 2 && phase < 5;
   const breakerOpen = phase >= 4;
@@ -66,6 +67,7 @@ export default function Home() {
         <div className="mode-switch learning-path" aria-label="Learning path"><button className={mode === "foundations" ? "active" : ""} onClick={() => setMode("foundations")}><span>01</span>Foundations</button><button className={mode === "faults" ? "active" : ""} onClick={() => setMode("faults")}><span>02</span>Fault Library</button><button className={mode === "challenge" ? "active" : ""} onClick={() => setMode("challenge")}><span>03</span>Challenge</button><button className={mode === "lab" ? "active" : ""} onClick={() => setMode("lab")}><span>04</span>Advanced Lab</button></div>
         <p>Educational simulator</p>
       </header>
+      <ProgressHUD />
 
       {mode === "foundations" ? <>
         <div className="progress" aria-label={`Lesson ${lesson + 1} of 4`}><div>{["Welcome", "Meet the system", "Watch a fault", "Check your learning"].map((label, index) => <button key={label} className={lesson === index ? "current" : lesson > index ? "done" : ""} onClick={() => index <= lesson && goTo(index)}><span>{lesson > index ? "✓" : index + 1}</span><small>{label}</small></button>)}</div><i style={{ width: `${(lesson / 3) * 100}%` }} /></div>
@@ -74,8 +76,10 @@ export default function Home() {
           <p className="eyebrow">DEMO WEDNESDAY · EPISODE 01</p>
           <h1>What happens when<br />electricity goes wrong?</h1>
           <p className="intro">Follow one short circuit from the moment it begins until the power system makes itself safe. No previous protection knowledge needed.</p>
+          <div className="rookie-brief"><span>NEW HERE? REMEMBER ONLY THREE THINGS</span><div><p><b>Relay</b>Detects danger</p><i>→</i><p><b>Breaker</b>Stops the current</p><i>→</i><p><b>Feeder</b>Carries power to people</p></div></div>
           <button className="primary" onClick={() => goTo(1)}>Start the guided lesson <span>→</span></button>
           <div className="promise"><span>About 3 minutes</span><span>Plain-language explanations</span><span>Learn at your own pace</span></div>
+          <div className="mission-brief"><div><span>YOUR FIRST MISSION</span><h2>Protect two buildings from one dangerous fault.</h2><p>Learn the equipment, predict the sequence, and isolate the fault without switching off healthy customers.</p></div><ul><li><b>01</b>Meet 4 protection components</li><li><b>02</b>Run 1 guided fault</li><li><b>03</b>Answer the protection check</li></ul><aside><span>MISSION REWARD</span><strong>+40 XP</strong><small>Fault Fundamentals badge</small></aside></div>
           <div className="mini-flow" aria-label="Lesson overview"><div><b>1</b><strong>A fault occurs</strong></div><i /><div><b>2</b><strong>Danger is detected</strong></div><i /><div><b>3</b><strong>The fault is disconnected</strong></div></div>
         </section>}
 
