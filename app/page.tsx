@@ -87,7 +87,8 @@ export default function Home() {
 
         {lesson === 2 && <section className="lesson-page simulation-lesson">
           <div className="lesson-heading"><p className="eyebrow">STEP 2 OF 3</p><h1>Watch the system protect itself</h1><p>One event will be highlighted at a time. Follow the explanation below the diagram.</p></div>
-          <div className={`guided-simulator ${fault ? "has-fault" : ""}`}>
+          <div className={`guided-simulator phase-${phase} ${fault ? "has-fault" : ""}`}>
+            <div className="simulation-status"><span className={playing ? "live" : ""}>{playing ? "LIVE SIMULATION" : phase === 5 ? "FAULT CLEARED" : "INTERACTIVE MODEL"}</span><p>{phase === 0 ? "Black pulses show electricity moving to both buildings." : phase < 4 ? "Watch the fault, relay, and breaker—the active part turns black." : "The broken line shows where the dangerous current was stopped."}</p></div>
             <div className="large-system">
               <div className="diagram-source"><span>~</span><strong>Power source</strong><small>Supplying electricity</small></div><i className={breakerOpen ? "line off" : "line"} />
               <div className={`diagram-relay ${relayActive ? "active" : ""}`}><span>!</span><strong>Protection relay</strong><small>{relayActive ? phase >= 3 ? "Trip command sent" : "Danger detected" : "Watching the current"}</small></div>
@@ -95,6 +96,7 @@ export default function Home() {
               <div className="split"><div className={breakerOpen ? "branch off" : "branch"}><span>Building A</span>{fault && <b className="fault">SHORT<br />CIRCUIT</b>}</div><div className="branch"><span>Building B</span><small>Still powered</small></div></div>
             </div>
             <div className="reading-strip"><span>CURRENT ON FEEDER 1</span><strong>{phases[phase].current}</strong><small>{fault ? "Dangerously high" : breakerOpen ? "Disconnected" : "Normal"}</small></div>
+            <div className="diagram-legend"><span><i className="flowing"/>Electricity flowing</span><span><i className="danger"/>Danger detected</span><span><i className="stopped"/>Circuit disconnected</span></div>
           </div>
           <article className="step-explanation"><span className="step-number">{phase + 1}</span><div><p>{playing ? "SIMULATION RUNNING" : phase === 0 ? "READY TO BEGIN" : phase === 5 ? "SIMULATION COMPLETE" : "SIMULATION PAUSED"}</p><h2>{phases[phase].title}</h2><p>{phases[phase].text}</p><strong>{phases[phase].action}</strong></div></article>
           <div className="phase-dots">{phases.map((item, index) => <button key={item.title} aria-label={item.title} className={phase === index ? "active" : phase > index ? "passed" : ""} onClick={() => { setPlaying(false); setPhase(index); }}>{index + 1}</button>)}</div>
