@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
   const title = "GridLab — Interactive Protection Sequence Laboratory";
-  const description = "Predict, trigger, replay and explain power-system protection events millisecond by millisecond.";
+  const description = "A beginner-friendly, interactive lesson showing how a relay and circuit breaker isolate a power-system fault.";
   return { title, description, icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" }, openGraph: { title, description, images: [{ url: `${origin}/og.png`, width: 1536, height: 1024 }] }, twitter: { card: "summary_large_image", title, description, images: [`${origin}/og.png`] } };
 }
 
