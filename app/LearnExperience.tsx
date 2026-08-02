@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Lesson } from "./GameApp";
+import PowerSystemSimulation from "./PowerSystemSimulation";
 
 export default function LearnExperience({lesson,back,done}:{lesson:Lesson;back:()=>void;done:()=>void}){
   const [stage,setStage]=useState<"learn"|"predict"|"watch"|"understand">("learn");
@@ -12,7 +13,7 @@ export default function LearnExperience({lesson,back,done}:{lesson:Lesson;back:(
   return <section className="simple-lesson"><div className="lesson-top"><button onClick={back}>← Learning path</button><div>{["Learn","Predict","Simulate","Understand"].map((x,i)=><span className={i<=["learn","predict","watch","understand"].indexOf(stage)?"active":""} key={x}>{i+1}<small>{x}</small></span>)}</div><b>LESSON {lesson.id}</b></div>
     {stage==="learn"&&<div className="focus-card learn-focus"><p className="eyebrow">ONE NEW IDEA</p><h1>{lesson.title}</h1><p>{lesson.concept}</p><div className="concept-preview"><div><b>~</b><span>Electricity</span></div><i/><div><b>{lesson.id<3?"?":"R"}</b><span>{lesson.id<3?"Something changes":lesson.term}</span></div><i/><div><b>H</b><span>People need power</span></div></div><div className="new-word"><span>NEW WORD</span><strong>{lesson.term}</strong><p>{lesson.meaning}</p></div><button className="primary" onClick={()=>setStage("predict")}>Try a prediction <span>→</span></button></div>}
     {stage==="predict"&&<div className="focus-card predict-focus"><p className="eyebrow">MAKE A PREDICTION</p><h2>{lesson.question}</h2><div>{lesson.options.map((x,i)=><button className={choice===x?"selected":""} onClick={()=>setChoice(x)} key={x}><span>{String.fromCharCode(65+i)}</span>{x}</button>)}</div><button disabled={!choice} className="primary" onClick={begin}>Run the simulation <span>→</span></button></div>}
-    {stage==="watch"&&<RichLearnSimulation lesson={lesson} tick={tick} playing={playing} setTick={setTick} setPlaying={setPlaying} explain={()=>setStage("understand")}/>} 
+    {stage==="watch"&&<PowerSystemSimulation lesson={lesson} tick={tick} playing={playing} setTick={setTick} setPlaying={setPlaying} explain={()=>setStage("understand")}/>}
     {stage==="understand"&&<div className="understand-screen"><div className="understand-result"><span>{correct?"YOUR PREDICTION WAS CORRECT":"LET'S CORRECT THE IDEA"}</span><h1>{correct?"You understood the system response.":`The best response was: ${lesson.answer}.`}</h1><p>{lesson.concept}</p><div><p><span>CURRENT</span><strong>{lesson.current}</strong></p><p><span>CLEARING</span><strong>{lesson.id===1||lesson.id===6?"No trip":"144 ms"}</strong></p><p><span>HEALTHY POWER</span><strong>Preserved</strong></p></div></div><div className="one-reflection"><span>ENGINEERING REFLECTION</span><h2>{lesson.reflection}</h2>{lesson.reflectionOptions.map((x,i)=><button key={x} className={reflection===x?(i===0?"correct":"wrong"):""} onClick={()=>setReflection(x)}><i>{String.fromCharCode(65+i)}</i>{x}</button>)}{reflection&&<p><b>{reflection===lesson.reflectionOptions[0]?"Correct.":"Not quite."}</b> {reflection===lesson.reflectionOptions[0]?"That is the key engineering principle.":"Review what changed and which areas should remain powered."}</p>}<button disabled={!reflection} className="primary" onClick={()=>{done();back()}}>Finish lesson <span>→</span></button></div></div>}
   </section>
 }
