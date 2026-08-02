@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AdvancedLab from "./AdvancedLab";
 import LearnScenarios from "./LearnScenarios";
+import ProtectionChallenge from "./ProtectionChallenge";
 
 type ComponentKey = "source" | "relay" | "breaker" | "feeder";
 
@@ -23,7 +24,7 @@ const phases = [
 ];
 
 export default function Home() {
-  const [mode, setMode] = useState<"learn" | "lab">("learn");
+  const [mode, setMode] = useState<"foundations" | "faults" | "challenge" | "lab">("foundations");
   const [lesson, setLesson] = useState(0);
   const [selected, setSelected] = useState<ComponentKey>("relay");
   const [phase, setPhase] = useState(0);
@@ -61,12 +62,12 @@ export default function Home() {
   return (
     <main>
       <header className="header">
-        <button className="logo" onClick={() => { setMode("learn"); goTo(0); }}><span>G</span><strong>GridLab</strong></button>
-        <div className="mode-switch" aria-label="Experience mode"><button className={mode === "learn" ? "active" : ""} onClick={() => setMode("learn")}>Learn</button><button className={mode === "lab" ? "active" : ""} onClick={() => setMode("lab")}>Advanced lab</button></div>
+        <button className="logo" onClick={() => { setMode("foundations"); goTo(0); }}><span>G</span><strong>GridLab</strong></button>
+        <div className="mode-switch learning-path" aria-label="Learning path"><button className={mode === "foundations" ? "active" : ""} onClick={() => setMode("foundations")}><span>01</span>Foundations</button><button className={mode === "faults" ? "active" : ""} onClick={() => setMode("faults")}><span>02</span>Fault Library</button><button className={mode === "challenge" ? "active" : ""} onClick={() => setMode("challenge")}><span>03</span>Challenge</button><button className={mode === "lab" ? "active" : ""} onClick={() => setMode("lab")}><span>04</span>Advanced Lab</button></div>
         <p>Educational simulator</p>
       </header>
 
-      {mode === "learn" ? <>
+      {mode === "foundations" ? <>
         <div className="progress" aria-label={`Lesson ${lesson + 1} of 4`}><div>{["Welcome", "Meet the system", "Watch a fault", "Check your learning"].map((label, index) => <button key={label} className={lesson === index ? "current" : lesson > index ? "done" : ""} onClick={() => index <= lesson && goTo(index)}><span>{lesson > index ? "✓" : index + 1}</span><small>{label}</small></button>)}</div><i style={{ width: `${(lesson / 3) * 100}%` }} /></div>
 
         {lesson === 0 && <section className="welcome lesson-page">
@@ -117,9 +118,8 @@ export default function Home() {
           ].map(item => <button key={item.id} className={moreLesson === item.id ? "active" : ""} onClick={() => setMoreLesson(moreLesson === item.id ? null : item.id)}><span>{item.n}</span><strong>{item.title}</strong><p>{item.text}</p></button>)}</div>{moreLesson && <article><span>MICRO-LESSON</span><h3>{moreLesson === "overload" ? "Current and time must be judged together." : moreLesson === "coordination" ? "Primary protection acts first; backup protection waits." : "Isolation must be confirmed before power returns."}</h3><p>{moreLesson === "overload" ? "Equipment can briefly draw high current normally. A relay uses current and time together, allowing short starting surges while disconnecting sustained danger." : moreLesson === "coordination" ? "If every breaker opened for one feeder fault, the whole substation would go dark. Selectivity disconnects the smallest possible section while upstream protection waits as backup." : "Operators identify the cause, isolate damage, test the healthy section, and restore loads gradually. Reclosing without checking can energise the same fault again."}</p><button className="primary" onClick={() => setMode("lab")}>Test this in Advanced Lab <span>→</span></button></article>}</section>
           <div className="lesson-actions"><button className="secondary" onClick={() => { setAnswer(null); goTo(2); }}>Watch again</button><button className="primary" onClick={() => setMode("lab")}>Try the advanced lab <span>→</span></button></div>
         </section>}
-        {lesson === 3 && <LearnScenarios />}
-      </> : <><AdvancedLab /><section className="legacy-lab" hidden>
-        <div className="lab-intro"><p className="eyebrow">ADVANCED LAB</p><h1>Change the protection. See the consequence.</h1><p>This area assumes you completed the guided lesson. Choose a scenario and compare which parts of the system lose power.</p><button className="text-button" onClick={() => setMode("learn")}>← Return to guided lesson</button></div>
+      </> : mode === "faults" ? <LearnScenarios /> : mode === "challenge" ? <ProtectionChallenge /> : <><AdvancedLab /><section className="legacy-lab" hidden>
+        <div className="lab-intro"><p className="eyebrow">ADVANCED LAB</p><h1>Change the protection. See the consequence.</h1><p>This area assumes you completed the guided lesson. Choose a scenario and compare which parts of the system lose power.</p><button className="text-button" onClick={() => setMode("foundations")}>← Return to guided lesson</button></div>
         <div className="scenario-grid">{[{ id: "correct", n: "01", title: "Correct coordination", text: "The nearest breaker clears the fault." },{ id: "too-fast", n: "02", title: "Main relay too fast", text: "The upstream breaker trips unnecessarily." },{ id: "failure", n: "03", title: "Feeder breaker fails", text: "Backup protection must operate." }].map(item => <button key={item.id} className={labScenario === item.id ? "selected" : ""} onClick={() => { setLabScenario(item.id); setLabResult(false); setLabPhase(0); }}><span>{item.n}</span><strong>{item.title}</strong><p>{item.text}</p></button>)}</div>
         <div className="lab-console"><div><span>FAULT LOCATION</span><strong>Feeder 1</strong></div><div><span>EXPECTED PRIMARY DEVICE</span><strong>Breaker 1</strong></div><button className="primary" onClick={() => { setLabPhase(1); setLabResult(true); }}>Run animated scenario <span>→</span></button></div>
         <div className={`lab-simulation ${labResult ? "running" : ""}`}><div className="lab-grid"><div className="lab-source"><b>~</b><span>Source</span></div><i className={labPhase >= 4 && labScenario !== "correct" ? "off" : ""}/><div className={`lab-device ${labPhase >= 4 && labScenario !== "correct" ? "open" : ""}`}><b>MB</b><span>Main breaker</span></div><i className={labPhase >= 4 && labScenario !== "correct" ? "off" : ""}/><div className="lab-bus"><strong>BUS</strong><div className={`lab-feeder ${labPhase >= 1 ? "faulted" : ""} ${labPhase >= 4 && labScenario === "correct" ? "isolated" : ""}`}><b>B1</b><span>Building A</span><em>{labPhase >= 1 && labPhase < 4 ? "FAULT" : labPhase >= 4 ? "OFF" : "ON"}</em></div><div className={labPhase >= 4 && labScenario !== "correct" ? "lab-feeder isolated" : "lab-feeder"}><b>B2</b><span>Building B</span><em>{labPhase >= 4 && labScenario !== "correct" ? "OFF" : "ON"}</em></div></div></div><div className="lab-timeline">{["Fault occurs", "Relay detects 4,820 A", labScenario === "too-fast" ? "Main relay races feeder relay" : "Trip command sent", labScenario === "failure" ? "Breaker 1 fails — backup trips" : labScenario === "too-fast" ? "Main breaker opens first" : "Breaker 1 opens"].map((event,index) => <div key={event} className={labPhase > index ? "active" : ""}><span>{index + 1}</span><p>{event}</p></div>)}</div></div>

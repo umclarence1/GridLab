@@ -17,6 +17,7 @@ export default function AdvancedLab() {
   const [protection, setProtection] = useState<Protection>("selective");
   const [stage, setStage] = useState(0);
   const [running, setRunning] = useState(false);
+  const [reflection, setReflection] = useState<string | null>(null);
 
   const selected = faults.find(item => item.id === fault)!;
   const overload = fault === "overload";
@@ -43,6 +44,7 @@ export default function AdvancedLab() {
     if (nextFault) setFault(nextFault);
     setStage(0);
     setRunning(false);
+    setReflection(null);
   }
 
   function run() { setStage(1); setRunning(true); }
@@ -80,6 +82,6 @@ export default function AdvancedLab() {
       <div className="lab-controls"><button className="secondary" onClick={() => reset()}>Reset</button><button className="primary" onClick={running ? () => setRunning(false) : stage > 0 && stage < 6 ? () => setRunning(true) : run}>{running ? "Pause simulation" : stage > 0 && stage < 6 ? "Continue simulation" : "Run fault simulation"} <span>→</span></button></div>
     </div>
 
-    {stage === 6 && <div className="learning-verdict"><span>WHAT THIS TEACHES</span><div><h2>{overload ? "Not every high current is a short circuit." : bothOut ? "Safety worked, but selectivity was lost." : "Protection isolated the smallest possible area."}</h2><p>{overload ? "The overload timer prevented an unnecessary trip when current returned to normal. Protection must consider both magnitude and duration." : bothOut ? "The main breaker removed the danger, but Building B also lost power. Correct coordination aims to protect healthy customers." : "Breaker 1 removed the fault while Building B stayed powered. This is selective protection—the preferred result."}</p></div><button onClick={() => reset()}>Try another setup →</button></div>}
+    {stage === 6 && <><div className="learning-verdict impact-version"><span>SYSTEM IMPACT REPORT</span><div><h2>{overload ? "Healthy loads remained powered." : bothOut ? "The hospital and school lost power." : "Only the faulted area lost power."}</h2><p>{overload ? "The overload timer prevented an unnecessary trip when current returned to normal." : bothOut ? "The fault was removed, but selectivity was lost because the main breaker disconnected every feeder." : "Breaker 1 removed the fault while the hospital, school, and factory remained powered."}</p><div className="compact-impact"><b>Clearing time <span>{overload ? "No trip" : protection === "selective" ? "144 ms" : "850 ms"}</span></b><b>People affected <span>{overload ? "0" : bothOut ? "995+" : "145"}</span></b><b>Protection quality <span>{overload || !bothOut ? "Excellent" : "Needs improvement"}</span></b></div></div><button onClick={() => reset()}>Try another setup →</button></div><div className="advanced-reflection"><span>ENGINEERING REFLECTION</span><h2>{overload ? "Why was delaying the trip the correct decision?" : bothOut ? "What single change would best preserve power to healthy feeders?" : "Why should the upstream relay still remain active after a selective trip?"}</h2>{[overload ? "To distinguish temporary demand from sustained danger" : bothOut ? "Coordinate the main relay to wait for primary protection" : "To provide backup if the feeder breaker fails", "To make every breaker open together", "To remove all relay delays"].map((option,index) => <button key={option} className={reflection === option ? index === 0 ? "correct" : "wrong" : ""} onClick={() => setReflection(option)}><i>{String.fromCharCode(65 + index)}</i>{option}</button>)}{reflection && <p><strong>{reflection === (overload ? "To distinguish temporary demand from sustained danger" : bothOut ? "Coordinate the main relay to wait for primary protection" : "To provide backup if the feeder breaker fails") ? "Correct." : "Think again."}</strong> Protection must balance speed with selectivity and dependable backup.</p>}</div></>}
   </section>;
 }
