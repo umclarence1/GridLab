@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AdvancedLab from "./AdvancedLab";
+import LearnScenarios from "./LearnScenarios";
 
 type ComponentKey = "source" | "relay" | "breaker" | "feeder";
 
@@ -116,6 +117,7 @@ export default function Home() {
           ].map(item => <button key={item.id} className={moreLesson === item.id ? "active" : ""} onClick={() => setMoreLesson(moreLesson === item.id ? null : item.id)}><span>{item.n}</span><strong>{item.title}</strong><p>{item.text}</p></button>)}</div>{moreLesson && <article><span>MICRO-LESSON</span><h3>{moreLesson === "overload" ? "Current and time must be judged together." : moreLesson === "coordination" ? "Primary protection acts first; backup protection waits." : "Isolation must be confirmed before power returns."}</h3><p>{moreLesson === "overload" ? "Equipment can briefly draw high current normally. A relay uses current and time together, allowing short starting surges while disconnecting sustained danger." : moreLesson === "coordination" ? "If every breaker opened for one feeder fault, the whole substation would go dark. Selectivity disconnects the smallest possible section while upstream protection waits as backup." : "Operators identify the cause, isolate damage, test the healthy section, and restore loads gradually. Reclosing without checking can energise the same fault again."}</p><button className="primary" onClick={() => setMode("lab")}>Test this in Advanced Lab <span>→</span></button></article>}</section>
           <div className="lesson-actions"><button className="secondary" onClick={() => { setAnswer(null); goTo(2); }}>Watch again</button><button className="primary" onClick={() => setMode("lab")}>Try the advanced lab <span>→</span></button></div>
         </section>}
+        {lesson === 3 && <LearnScenarios />}
       </> : <><AdvancedLab /><section className="legacy-lab" hidden>
         <div className="lab-intro"><p className="eyebrow">ADVANCED LAB</p><h1>Change the protection. See the consequence.</h1><p>This area assumes you completed the guided lesson. Choose a scenario and compare which parts of the system lose power.</p><button className="text-button" onClick={() => setMode("learn")}>← Return to guided lesson</button></div>
         <div className="scenario-grid">{[{ id: "correct", n: "01", title: "Correct coordination", text: "The nearest breaker clears the fault." },{ id: "too-fast", n: "02", title: "Main relay too fast", text: "The upstream breaker trips unnecessarily." },{ id: "failure", n: "03", title: "Feeder breaker fails", text: "Backup protection must operate." }].map(item => <button key={item.id} className={labScenario === item.id ? "selected" : ""} onClick={() => { setLabScenario(item.id); setLabResult(false); setLabPhase(0); }}><span>{item.n}</span><strong>{item.title}</strong><p>{item.text}</p></button>)}</div>
