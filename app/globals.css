@@ -125,3 +125,11 @@ button:focus-visible,.simple-header button:focus-visible,.primary:focus-visible,
 
 @media(max-width:850px){.mission-brief-head h1{max-width:none}.simple-lesson .mission-brief{max-width:100%}}
 @media(max-width:600px){.hero-circuit,.simple-lesson .mission-brief{box-shadow:0 7px 20px rgba(30,55,90,.09)}.mission-brief-head h1{font-size:36px;overflow-wrap:normal}.simple-lesson .mission-brief{padding:22px}.mission-brief-info{gap:10px}}
+
+/* Unmissable end-of-mission action */
+.finish-mission-panel{margin-top:28px;padding:18px;border:1px solid #b8c6d8;border-radius:12px;background:#f8faff;display:grid;gap:16px;box-shadow:0 8px 22px rgba(30,55,90,.08)}
+.finish-mission-panel>div{display:flex;align-items:center;gap:12px}.finish-mission-panel>div>b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:#e7edf5;color:var(--muted);font:800 12px "DM Mono"}
+.finish-mission-panel>div span,.finish-mission-panel>div strong{display:block}.finish-mission-panel>div span{font:700 9px "DM Mono";letter-spacing:.1em;color:var(--muted)}.finish-mission-panel>div strong{font:700 13px/1.45 Manrope;letter-spacing:0;color:var(--ink);margin-top:4px}
+.finish-mission-panel>.primary{width:100%;min-height:58px;font-size:14px;justify-content:center}.finish-mission-panel>.primary:disabled{background:#d6dde7;border-color:#c7d0dc;color:#667386;box-shadow:none;cursor:not-allowed}
+.finish-mission-panel.ready{border-color:#79bd98;background:var(--healthy-soft);box-shadow:0 10px 24px rgba(22,138,75,.12)}.finish-mission-panel.ready>div>b{background:var(--healthy);color:#fff}.finish-mission-panel.ready>div span{color:var(--healthy)}
+@media(max-width:600px){.finish-mission-panel{margin-top:22px;padding:15px}.finish-mission-panel>.primary{min-height:56px}}
