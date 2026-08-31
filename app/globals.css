@@ -51,3 +51,77 @@ body{font-size:16px}.simple-header{height:72px;padding:0 max(24px,calc((100vw - 
 /* Mission card correction: one clear story, one clue, one term */
 .simple-lesson .mission-brief{display:block;grid-template-columns:none;margin:0 auto;max-width:780px;padding:38px;border-radius:12px;overflow:visible;text-align:left;box-shadow:6px 6px 0 var(--soft)}.simple-lesson .mission-brief:before,.simple-lesson .mission-brief:after{display:none!important;content:none!important}.mission-brief-head{padding:0!important}.mission-brief-head .eyebrow{font-size:10px;margin-bottom:14px}.mission-brief-head h1{font-size:clamp(38px,5vw,56px);line-height:1.02;letter-spacing:-.055em;max-width:none;margin:0 0 16px}.mission-brief-head>p:last-child{font-size:18px;line-height:1.55;color:var(--muted);max-width:650px;margin:0}.mission-brief-info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:26px 0 24px;padding:0!important}.mission-brief-info>div{border:1px solid var(--line);border-radius:9px;background:var(--paper);padding:18px}.mission-brief-info span{display:block;font:500 10px "DM Mono";letter-spacing:.08em;color:var(--muted);margin-bottom:8px}.mission-brief-info strong{font-size:15px;line-height:1.45}.mission-brief-info p{font-size:13px;line-height:1.5;color:var(--muted);margin:0}.mission-brief>.primary{font-size:13px}
 @media(max-width:600px){.simple-lesson .mission-brief{padding:24px}.mission-brief-head h1{font-size:38px}.mission-brief-head>p:last-child{font-size:16px}.mission-brief-info{grid-template-columns:1fr}.mission-brief-info>div{padding:15px}}
+
+/* GridLab product palette: color communicates system state */
+:root{--paper:#f6f8fb;--white:#ffffff;--ink:#101828;--muted:#5f6c7b;--soft:#e7edf5;--line:#cbd5e1;--brand:#2563eb;--brand-dark:#1d4ed8;--brand-soft:#eaf1ff;--healthy:#168a4b;--healthy-soft:#eaf8f0;--warning:#b56a00;--warning-soft:#fff6df;--danger:#d92d20;--danger-soft:#fff0ee}
+body{background:var(--paper);color:var(--ink)}
+.simple-header{border-bottom-color:#d8e0ea;background:rgba(246,248,251,.94);box-shadow:0 1px 0 rgba(16,24,40,.03)}
+.simple-header>button b,.logo>span{background:var(--ink)}
+.simple-header nav button{color:var(--muted)}
+.simple-header nav button.active,.mode-switch button.active{background:var(--brand);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.22)}
+.primary{border-color:var(--brand-dark);background:var(--brand);color:#fff;box-shadow:4px 4px 0 #bfd0f5}
+.primary:hover{background:var(--brand-dark);box-shadow:6px 6px 0 #bfd0f5}
+.secondary{border-color:#aebccd;color:var(--ink)}
+.secondary:hover{border-color:var(--brand);color:var(--brand-dark)}
+.eyebrow,.mission-brief-head .eyebrow{color:var(--brand-dark)}
+button:focus-visible,.simple-header button:focus-visible,.primary:focus-visible,.secondary:focus-visible,.vertical-path button:focus-visible,.predict-focus button:focus-visible,.one-reflection button:focus-visible{outline:3px solid #6ea0ff;outline-offset:3px}
+
+/* Home: calm startup surface with an immediately readable live circuit */
+.hero-circuit{border-color:#b9c6d6;box-shadow:10px 10px 0 #dbe5f3}
+.circuit-status{background:var(--ink)}
+.circuit-status span{color:#a9b8cc}.circuit-status strong{color:#dce7ff}
+.circuit-line{background-color:#fbfdff;background-image:radial-gradient(#cfdae8 1px,transparent 1px)}
+.circuit-line b{border-color:var(--brand);color:var(--brand-dark);box-shadow:0 0 0 5px var(--brand-soft)}
+.circuit-line>i{background:#a9c2f8}.circuit-line>i:after{background:var(--brand);box-shadow:-16px 0 0 rgba(37,99,235,.35)}
+.circuit-callout{border-top-color:#d7e0eb;background:var(--healthy-soft)}
+.circuit-callout span{color:var(--healthy)}.circuit-callout strong{color:var(--healthy)}
+.home-next>div{border-top-color:#c8d5e5}.home-next span{color:var(--brand-dark)}
+
+/* Learning path and mission surfaces */
+.mission-grid button,.focus-card,.simple-lesson .mission-brief,.predict-focus,.understand-screen,.one-reflection{border-color:#bdc9d8;background:#fff;box-shadow:0 8px 24px rgba(30,55,90,.07)}
+.mission-grid button:hover{border-color:#7aa2ee;box-shadow:0 12px 28px rgba(37,99,235,.12)}
+.mission-grid button>span{border-color:#91a4ba;color:var(--brand-dark);background:var(--brand-soft)}
+.mission-grid button.recommended{background:var(--ink);box-shadow:7px 7px 0 #b9cdf3}
+.mission-grid button.recommended>span{background:var(--brand);border-color:#8ab0ff}
+.mission-grid button.done>span{background:var(--healthy);border-color:var(--healthy);color:#fff}
+.lesson-top>div span{border-color:#aebccd;background:#fff;color:var(--muted)}
+.lesson-top>div span.active,.lesson-top>div span.current{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 0 0 5px var(--brand-soft)}
+.lesson-top>div span.done{background:var(--healthy-soft);border-color:var(--healthy);color:var(--healthy)}
+.lesson-top>div span:after{background:#cbd7e6}
+.simple-lesson{min-width:0}.focus-card,.simple-lesson .mission-brief{width:100%;min-width:0;overflow:hidden}
+.mission-brief-head h1{overflow-wrap:anywhere;max-width:14ch}
+.mission-brief-info>div,.brief-signal,.evidence-only,.understanding-score{border-color:#c7d3e2;background:#f8faff}
+.mission-brief-info>div:first-child{background:var(--brand-soft);border-color:#bfd2fa}
+.mission-brief-info span,.brief-signal span,.evidence-only span{color:var(--brand-dark)}
+.predict-focus>div button,.one-reflection>button,.quiz>button{border-color:#c4cfdd}
+.predict-focus>div button:hover,.one-reflection>button:hover,.quiz>button:hover{border-color:var(--brand);background:var(--brand-soft)}
+.predict-focus>div button.selected,.one-reflection>button.selected{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+
+/* Simulation: blue power flow, amber relay action, red faults, green healthy loads */
+.ps-sim,.guided-simulator,.lab-simulation,.lab-stage{border-color:#aebdce;box-shadow:0 10px 28px rgba(30,55,90,.1)}
+.ps-sim>header,.reading-strip{background:var(--ink)}
+.ps-workspace,.large-system,.lab-grid,.scene-grid{background-color:#fbfdff;background-image:radial-gradient(#d1dce9 1px,transparent 1px)}
+.ps-line,.ps-feeder-wire,.large-system>.line,.lab-grid>i,.power-line{background:#8fb1f4}
+.ps-line i,.ps-feeder-wire i,.large-system>.line:after,.lab-simulation.running .lab-grid>i:not(.off):after{background:var(--brand)}
+.ps-source>b,.diagram-source>span,.lab-source b,.scene-source>b{border-color:var(--brand);color:var(--brand-dark);box-shadow:0 0 0 5px var(--brand-soft)}
+.ps-relay.picked-up>b,.diagram-relay.active>span,.scene-relay.active>b{background:var(--warning);border-color:var(--warning);color:#fff}
+.trip-signal.sent{border-color:var(--warning)}.trip-signal.sent:after{background:var(--warning)}
+.ps-fault>b,.fault,.fault-options button.selected.faulted,.lab-feeder.faulted:not(.isolated){background:var(--danger);border-color:var(--danger);color:#fff}
+.ps-fault.visible,.fault-point.visible{filter:drop-shadow(0 0 8px rgba(217,45,32,.35))}
+.ps-healthy-feeder,.building.powered,.lab-feeder:not(.faulted){border-color:var(--healthy)}
+.ps-healthy-feeder>div>b,.building.powered>b{border-color:var(--healthy);color:var(--healthy);background:var(--healthy-soft)}
+.ps-events button.current,.rich-event-strip button.current,.lab-timeline div.active,.event-sequence button.active{background:var(--brand);color:#fff}
+.ps-readings>div>i b,.current-gauge>div i{background:var(--brand)}
+.ps-readings>div:first-child strong,.live-reading strong{color:var(--brand-dark)}
+.learning-verdict.correct,.feedback.correct,.lab-result.success{border-color:var(--healthy);background:var(--healthy-soft);color:#126b3c}
+.learning-verdict.wrong,.feedback.wrong,.lab-result.failure{border-color:var(--danger);background:var(--danger-soft);color:#9f2118}
+
+/* Experiment setup: selections look interactive before the simulator opens */
+.section-tag>span{background:var(--brand-soft);color:var(--brand-dark);border-color:#b9cdf8}
+.fault-options button,.response-options button,.lab-ready{border-color:#bdc9d8;background:#fff}
+.fault-options button:hover,.response-options button:hover{border-color:var(--brand);background:#f8faff}
+.fault-options button.selected,.response-options button.selected{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+.fault-options button>b{background:#edf3ff;color:var(--brand-dark)}
+
+@media(max-width:850px){.mission-brief-head h1{max-width:none}.simple-lesson .mission-brief{max-width:100%}}
+@media(max-width:600px){.hero-circuit,.simple-lesson .mission-brief{box-shadow:0 7px 20px rgba(30,55,90,.09)}.mission-brief-head h1{font-size:36px;overflow-wrap:normal}.simple-lesson .mission-brief{padding:22px}.mission-brief-info{gap:10px}}
