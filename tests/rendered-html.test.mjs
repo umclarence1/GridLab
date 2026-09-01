@@ -30,9 +30,10 @@ test("server-renders the production GridLab experience", async () => {
 });
 
 test("keeps the production navigation and learning flow in source", async () => {
-  const [app, mission, lab, css] = await Promise.all([
+  const [app, mission, simulation, lab, css] = await Promise.all([
     readFile(new URL("../app/GameApp.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/LearnExperience.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/PowerSystemSimulation.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/AdvancedLab.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
@@ -44,6 +45,11 @@ test("keeps the production navigation and learning flow in source", async () => 
   assert.match(mission, /Situation/);
   assert.match(mission, /Run my decision/);
   assert.match(mission, /WHAT HAPPENED/);
+  assert.match(simulation, /Circuit diagram/);
+  assert.match(simulation, /Real equipment/);
+  assert.match(simulation, /Current transformer/);
+  assert.match(simulation, /Feeder breaker/);
+  assert.match(simulation, /FAULT DETECTED/);
   assert.match(lab, /Open simulator/);
   assert.match(lab, /Nearest breaker opens/);
   assert.match(css, /Production usability pass/);
