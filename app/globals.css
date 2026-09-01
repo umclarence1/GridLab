@@ -134,6 +134,28 @@ button:focus-visible,.simple-header button:focus-visible,.primary:focus-visible,
 .finish-mission-panel.ready{border-color:#79bd98;background:var(--healthy-soft);box-shadow:0 10px 24px rgba(22,138,75,.12)}.finish-mission-panel.ready>div>b{background:var(--healthy);color:#fff}.finish-mission-panel.ready>div span{color:var(--healthy)}
 @media(max-width:600px){.finish-mission-panel{margin-top:22px;padding:15px}.finish-mission-panel>.primary{min-height:56px}}
 
+/* Phone-first usability: every learning step fits a narrow screen */
+@media(max-width:600px){
+  html,body{max-width:100%;overflow-x:hidden}
+  body{font-size:15px}
+  .simple-header{padding:0 12px;gap:8px}.simple-header>button{gap:7px}.simple-header>button strong{font-size:14px}.simple-header nav{margin-left:auto;gap:2px}.simple-header nav button{padding:9px 8px;font-size:10px}
+  .production-home,.simple-path,.simple-lesson,.advanced-lab-v2{width:calc(100% - 24px)}
+  .production-home{padding-top:34px}.hero-copy h1{font-size:clamp(43px,14vw,54px);text-align:center}.hero-copy .eyebrow{text-align:center;font-size:9px}.hero-copy>p:not(.eyebrow){line-height:1.55}.hero-copy>small{font-size:11px;line-height:1.5;text-align:center}
+  .hero-circuit{width:100%}.circuit-line{padding:20px 10px}.circuit-callout{padding:15px}.home-next{gap:18px}
+  .simple-path{padding-top:42px}.simple-path-head h1{font-size:38px;line-height:1.02}.mission-grid button{min-height:150px;padding:18px}.mission-grid button strong{font-size:18px}.mission-grid button p{font-size:12px;line-height:1.5}
+  .simple-lesson{padding-top:18px}.lesson-top{display:grid;grid-template-columns:auto 1fr;gap:16px;margin-bottom:20px}.lesson-top>b{display:none}.lesson-top>div{grid-column:1/-1;width:100%;justify-content:space-between}.lesson-top>div span{width:34px;height:34px}.lesson-top>div span:after{width:calc((100vw - 190px)/3)}
+  .focus-card,.simple-lesson .mission-brief,.predict-focus,.one-reflection,.understand-result{padding:20px;border-radius:11px}
+  .mission-brief-head h1{font-size:34px;line-height:1.04}.mission-brief-head>p:last-child{font-size:15px}.mission-brief-info{margin:20px 0}.mission-brief>.primary,.predict-focus>.primary{width:100%;min-height:56px}
+  .predict-focus h2{font-size:27px}.predict-focus>div button,.one-reflection>button{font-size:13px;line-height:1.35;padding:12px;min-height:58px}
+  .understand-screen{display:grid!important;grid-template-columns:1fr!important;gap:12px}.understand-result h1{font-size:31px}.prediction-compare{grid-template-columns:1fr!important}.prediction-compare p{border-right:0!important;border-bottom:1px solid #d6deea!important}.prediction-compare p:last-child{border-bottom:0!important}.energy-story{grid-template-columns:1fr!important}.energy-story p{border-right:0!important;border-bottom:1px solid var(--line)}.energy-story p:last-child{border-bottom:0}
+  .finish-mission-panel>div strong{font-size:12px}.finish-mission-panel>.primary{font-size:13px}
+  .ps-sim{width:100%;overflow-x:auto;overscroll-behavior-x:contain}.ps-sim>header{min-width:0;height:auto;min-height:70px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:10px}.ps-sim>header>div:first-child{grid-column:1}.view-toggle{grid-column:1/-1;grid-row:2;margin:0;display:flex}.view-toggle button{flex:1;min-height:40px}.ps-clock{grid-column:2;grid-row:1}.ps-explainer{font-size:11px}
+  .ps-readings{min-width:0!important;grid-template-columns:1fr 1fr}.ps-readings>div{min-width:0}.ps-events{min-width:690px!important}.ps-sim>.sim-controls{min-width:0!important;position:sticky;left:0;display:grid;grid-template-columns:1fr 1fr;padding:12px}.ps-sim>.sim-controls button{width:100%;margin:0}.ps-sim>.sim-controls .primary{grid-column:1/-1}
+  .lab-v2-intro{gap:18px;margin-bottom:28px}.lab-v2-intro h1{font-size:38px;line-height:1.05}.lab-v2-intro>p{font-size:14px;line-height:1.55}.fault-options,.response-options{grid-template-columns:1fr!important}.fault-options button{min-height:108px}.section-tag{align-items:flex-start}.section-tag>span{width:36px;height:36px}
+  .lab-stage{width:100%;overflow-x:auto;overscroll-behavior-x:contain}.lab-stage-head{min-width:0;padding:14px;display:grid;gap:10px}.live-reading{margin:0}.event-sequence{min-width:680px}.advanced-reflection{padding:20px}.advanced-reflection button{min-height:54px}
+  .sim-controls:before{content:"Swipe the circuit sideways to inspect every device";grid-column:1/-1;font:600 9px "DM Mono";letter-spacing:.04em;color:var(--muted);text-align:center;margin-bottom:4px}
+}
+
 /* Simulator 2.0 — synchronized circuit and equipment views */
 .ps-sim{border:0;border-radius:18px;background:#fff;box-shadow:0 24px 60px rgba(15,31,56,.14);overflow:hidden}
 .ps-sim .sim-command-bar{height:auto;min-height:82px;padding:14px 18px;background:#0d1728;gap:18px;border:0}
